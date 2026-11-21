@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QueueUp</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<header>
+    <h2>QueueUp</h2>
+    <p>Smart Queue Management System</p>
+</header>
+
+<main class="container">
+
+    <h1>Welcome to QueueUp!</h1>
+
+    <p class="subtitle">
+        Manage queues easily and save your waiting time.
+    </p>
+
+    <form action="/create" method="POST">
+
+        <button type="submit" class="create-btn">
+            Create Queue
+        </button>
+
+    </form>
+
+    <h2>Join an Existing Queue</h2>
+
+    <form action="/join" method="POST">
+
+        <input
+            type="text"
+            name="participant_name"
+            placeholder="Enter your name"
+            required
+        >
+
+        <input
+            type="text"
+            name="room_code"
+            placeholder="Enter room code"
+            required
+        >
+
+        <button type="submit" class="join-btn">
+            Join Queue
+        </button>
+
+    </form>
+
+</main>
+
+</body>
+</html>

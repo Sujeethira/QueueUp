@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QueueUp - Host Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<header>
+    <h2>QueueUp</h2>
+    <p>Host Dashboard</p>
+</header>
+
+<main class="container">
+
+    <h1>Your Queue Has Been Created!</h1>
+
+    <p class="subtitle">
+        Share this room code with participants.
+    </p>
+
+    <h2>Room Code</h2>
+    <h1>{{ room_code }}</h1>
+
+    <h2>Currently Serving</h2>
+
+    <h1 id="called-participant">
+        {{ current if current else "Nobody yet" }}
+    </h1>
+
+    <h2 id="host-notification">
+        Welcome to QueueUp!
+    </h2>
+
+    <h2>Waiting Participants</h2>
+
+    <div id="participant-list">
+
+        {% if participants %}
+
+            {% for participant in participants %}
+                <p>{{ loop.index }}. {{ participant }}</p>
+            {% endfor %}
+
+        {% else %}
+
+            <p>No participants have joined yet.</p>
+
+        {% endif %}
+
+    </div>
+
+    <form action="{{ url_for('call_next', room_code=room_code) }}"
+          method="POST">
+
+        <button type="submit" class="create-btn">
+            Call Next
+        </button>
+
+    </form>
+
+</main>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+
+    const socket = io();
+
+    const roomCode = {{ room_code | tojson }};
+
+    socket.on("connect", function() {
+
+        socket.emit("join_room", {
+            room_code: roomCode
+        });
+
+        console.log("Host connected!");
+
+    });
+
+
+    socket.on("queue_updated", function(data) {
+
+        const participantList =
+            document.getElementById("participant-list");
+
+        const calledParticipant =
+            document.getElementById("called-participant");
+
+        const notification =
+            document.getElementById("host-notification");
+
+        const participants = data.participants || [];
+
+        // Update currently serving
+        calledParticipant.textContent =
+            data.current || "Nobody yet";
+
+        // Update waiting list
+        participantList.innerHTML = "";
+
+        if (participants.length > 0) {
+
+            participants.forEach(function(name, index) {
+
+                const item = document.createElement("p");
+
+                item.textContent = (index + 1) + ". " + name;
+
+                participantList.appendChild(item);
+
+            });
+
+        } else {
+
+            participantList.textContent =
+                "No participants are waiting.";
+
+        }
+
+        // Host notification
+        if (data.called) {
+
+            notification.textContent =
+                "Now Serving: " + data.called;
+
+            notification.style.color = "green";
+
+        } else if (data.current) {
+
+            notification.textContent =
+                "Currently serving: " + data.current;
+
+        } else {
+
+            notification.textContent =
+                "Waiting for participants...";
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

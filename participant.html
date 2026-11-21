@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>QueueUp - Participant Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+<header>
+    <h2>QueueUp</h2>
+    <p>Participant Dashboard</p>
+</header>
+
+<main class="container">
+
+    <h1>Welcome, {{ participant_name }}!</h1>
+
+    <p class="subtitle">
+        You have successfully joined the queue.
+    </p>
+
+    <h2>Your Room Code</h2>
+
+    <h1>{{ room_code }}</h1>
+
+    <h2>Your Queue Position</h2>
+
+    <h1 id="queue-position">{{ position }}</h1>
+
+    <h2 id="status-message">
+        Please wait for your turn.
+    </h2>
+
+</main>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<script>
+
+    const socket = io();
+
+    const roomCode = {{ room_code | tojson }};
+    const participantName = {{ participant_name | tojson }};
+
+    socket.on("connect", function() {
+
+        socket.emit("join_room", {
+            room_code: roomCode
+        });
+
+        console.log("Participant connected!");
+
+    });
+
+
+    socket.on("queue_updated", function(data) {
+
+        const positionElement =
+            document.getElementById("queue-position");
+
+        const statusElement =
+            document.getElementById("status-message");
+
+        const participants = data.participants || [];
+
+        // Check whether this participant is being called
+        if (data.current === participantName) {
+
+            positionElement.textContent = "Your Turn!";
+
+            statusElement.textContent =
+                "IT'S YOUR TURN! PLEASE PROCEED.";
+
+            statusElement.style.color = "green";
+            statusElement.style.fontWeight = "bold";
+
+            return;
+        }
+
+        // Find updated waiting position
+        const newPosition =
+            participants.indexOf(participantName);
+
+        if (newPosition !== -1) {
+
+            positionElement.textContent = newPosition + 1;
+
+            statusElement.textContent =
+                "Please wait for your turn.";
+
+            statusElement.style.color = "black";
+            statusElement.style.fontWeight = "normal";
+
+        }
+
+        // If this participant has already been served
+        else if (data.current !== participantName) {
+
+            positionElement.textContent = "Completed";
+
+            statusElement.textContent =
+                "Your turn has been completed. Thank you!";
+
+            statusElement.style.color = "blue";
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>
